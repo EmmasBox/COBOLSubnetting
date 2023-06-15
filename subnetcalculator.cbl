@@ -15,18 +15,19 @@
           01 CurrentSubnets PIC 9(7) VALUE 256.
           01 CurrentSubnetsOutput PIC Z(7) VALUE ZEROES.
           01 CurrentSubnets2 PIC 9(7) VALUE 2.
-          01 TotalBits PIC 9(2) VALUE ZEROES. 
-          01 TotalBitsOutput PIC Z(2) VALUE ZEROES. 
-          01 CurrentBits PIC 9(2) VALUE 1. 
+          01 TotalBits PIC 9 VALUE ZEROES. 
+          01 TotalBits2 PIC 9 VALUE ZEROES.
+          01 CurrentBits PIC 9 VALUE 0. 
+          01 CurrentBits2 PIC 9 VALUE 7. 
           01 NetworkClass PIC A(1) VALUE "X".
           01 CustomSubnet PIC 9(3) VALUE 0.
           01 CustomSubnet2 PIC 9(3) VALUE 256.
           01 SubnetValue PIC 9(3) VALUE 256.
           01 SubnetBinary PIC 9(3) VALUE 2.
-          01 SubnetBinary2 PIC 9(3) VALUE 2.
+          01 SubnetBinary2 PIC 9(3) VALUE 256.
           01 SubnetAmountBinary PIC 9(3) VALUE 128.
           01 SubnetAmountBinary2 PIC 9(3) VALUE 128.
-          01 MaxBits PIC 9(2) VALUE 8.
+          01 MaxBits PIC 9 VALUE 7.
        PROCEDURE DIVISION.
          ACCEPTINFO.
            DISPLAY "Welcome to Emma's Custom COBOL Subnet Calculator."
@@ -39,6 +40,7 @@
       -    WITH NO ADVANCING.
            ACCEPT DesiredSubnets
            MOVE WorkingIP TO IPClassPortion.
+           display "//GENERAL SECTION//"
            IF IPClassPortion < 128 THEN
               MOVE "A" TO NetworkClass 
               DISPLAY "Class A, default subnet mask: 255.0.0.0"
@@ -85,22 +87,25 @@
                  STOP RUN
               END-IF
            END-IF.
-           PERFORM UNTIL CurrentSubnets > DesiredSubnets 
-              COMPUTE SubnetBinary2 = SubnetBinary2 /2
+           PERFORM UNTIL CurrentSubnets2 > DesiredSubnets 
+              COMPUTE SubnetBinary2 = SubnetBinary2 / 2
               COMPUTE CustomSubnet2 = SubnetValue  - SubnetBinary2
               COMPUTE CurrentSubnets2 = CurrentSubnets2 * 2
-              IF CurrentSubnets > DesiredSubnets THEN
-                 DISPLAY
-      -          "//SUBNET PRIORITY SECTION//"       
-                  IF IPClassPortion < 128 THEN
-                    DISPLAY "Custom subnet: 255.", CustomSubnet2,".0.0"
-                  ELSE IF IPClassPortion < 192 THEN
-                    DISPLAY "Custom subnet: 255.255", CustomSubnet2,".0"
-                  ELSE IF IPClassPortion < 256 THEN
-                    DISPLAY "Custom subnet: 255.255.255.", CustomSubnet2
-                  END-IF
+              COMPUTE CurrentBits2 = CurrentBits2 - 1
+              COMPUTE TotalBits2 = MaxBits - CurrentBits2
+              IF CurrentSubnets2 > DesiredSubnets THEN
+               DISPLAY
+      -        "//SUBNET PRIORITY SECTION//"    
+               DISPLAY "Active bits: ", TotalBits2
+               IF IPClassPortion < 128 THEN
+                  DISPLAY "Custom subnet: 255.", CustomSubnet2,".0.0"
+               ELSE IF IPClassPortion < 192 THEN
+                  DISPLAY "Custom subnet: 255.255.", CustomSubnet2,".0"
+               ELSE IF IPClassPortion < 256 THEN
+                  DISPLAY "Custom subnet: 255.255.255.", CustomSubnet2
+               END-IF
               END-IF
-           END-PERFORM
+           END-PERFORM.
            PERFORM UNTIL TotalClients > DesiredClients
                COMPUTE CurrentBits = CurrentBits + 1
                COMPUTE TotalClients = TotalClients * 2
@@ -113,7 +118,7 @@
                   DISPLAY
       -           "//HOST PRIORITY SECTION//"
                   PERFORM CurrentBits TIMES 
-                    COMPUTE CurrentSubnets = CurrentSubnets /2
+                    COMPUTE CurrentSubnets = CurrentSubnets / 2
                   END-PERFORM
                   MOVE CurrentSubnets TO CurrentSubnetsOutput 
                   MOVE TotalClients TO TotalClientsOutput 
@@ -121,18 +126,16 @@
                   MOVE UsableClients TO UsableClientsOutput  
                   DISPLAY "Usable clients: ", UsableClientsOutput
                   COMPUTE TotalBits = MaxBits - CurrentBits
-                  MOVE TotalBits TO TotalBitsOutput 
-                  DISPLAY "Bits: ", TotalBitsOutput
+                  DISPLAY "Active bits: ", TotalBits
                   COMPUTE CustomSubnet = SubnetValue - SubnetBinary 
                   DISPLAY "Subnets: ", CurrentSubnetsOutput
                   IF IPClassPortion < 128 THEN
                     DISPLAY "Custom subnet: 255.", CustomSubnet,".0.0"
                   ELSE IF IPClassPortion < 192 THEN
-                    DISPLAY "Custom subnet: 255.255", CustomSubnet,".0"
+                    DISPLAY "Custom subnet: 255.255.", CustomSubnet,".0"
                   ELSE IF IPClassPortion < 256 THEN
                     DISPLAY "Custom subnet: 255.255.255.", CustomSubnet
                   END-IF
                END-IF
            END-PERFORM.
-
            STOP RUN.
