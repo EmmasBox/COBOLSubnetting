@@ -17,6 +17,7 @@
           01 CurrentSubnets2 PIC 9(7) VALUE 2.
           01 TotalBits PIC 9 VALUE ZEROES. 
           01 TotalBits2 PIC 9 VALUE ZEROES.
+          01 BitAdditions PIC 9 VALUE 1.
           01 CurrentBits PIC 9 VALUE 0. 
           01 CurrentBits2 PIC 9 VALUE 7. 
           01 NetworkClass PIC A(1) VALUE "X".
@@ -92,7 +93,7 @@
               COMPUTE CustomSubnet2 = SubnetValue  - SubnetBinary2
               COMPUTE CurrentSubnets2 = CurrentSubnets2 * 2
               COMPUTE CurrentBits2 = CurrentBits2 - 1
-              COMPUTE TotalBits2 = MaxBits - CurrentBits2
+              COMPUTE TotalBits2 = (MaxBits - CurrentBits2) - 1
               IF CurrentSubnets2 > DesiredSubnets THEN
                DISPLAY
       -        "//SUBNET PRIORITY SECTION//"    
@@ -108,6 +109,7 @@
            END-PERFORM.
            PERFORM UNTIL TotalClients > DesiredClients
                COMPUTE CurrentBits = CurrentBits + 1
+               COMPUTE BitAdditions = BitAdditions + 1
                COMPUTE TotalClients = TotalClients * 2
                COMPUTE UsableClients = TotalClients - 2 
                COMPUTE SubnetBinary = SubnetBinary * 2
@@ -117,7 +119,7 @@
                IF UsableClients >= DesiredClients THEN
                   DISPLAY
       -           "//HOST PRIORITY SECTION//"
-                  PERFORM CurrentBits TIMES 
+                  PERFORM BitAdditions TIMES 
                     COMPUTE CurrentSubnets = CurrentSubnets / 2
                   END-PERFORM
                   MOVE CurrentSubnets TO CurrentSubnetsOutput 
@@ -125,7 +127,7 @@
                   DISPLAY "Total clients: ", TotalClientsOutput
                   MOVE UsableClients TO UsableClientsOutput  
                   DISPLAY "Usable clients: ", UsableClientsOutput
-                  COMPUTE TotalBits = MaxBits - CurrentBits
+                  COMPUTE TotalBits = (MaxBits - CurrentBits) - 1
                   DISPLAY "Active bits: ", TotalBits
                   COMPUTE CustomSubnet = SubnetValue - SubnetBinary 
                   DISPLAY "Subnets: ", CurrentSubnetsOutput
